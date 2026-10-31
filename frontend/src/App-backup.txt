@@ -1,0 +1,110 @@
+
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "bootstrap/dist/css/bootstrap.min.css";
+
+const API = "http://localhost:5000/tasks";
+
+function App() {
+  const [tasks, setTasks] = useState([]);
+  const [title, setTitle] = useState("");
+
+  const loadTasks = async () => {
+    try {
+      const res = await axios.get(API);
+      setTasks(res.data);
+    } catch (err) {
+      alert("Cannot connect to backend. Check server.js.");
+    }
+  };
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const addTask = async () => {
+    if (!title.trim()) return alert("Enter a task title");
+    try {
+      await axios.post(API, { title });
+      setTitle("");
+      loadTasks();
+    } catch (err) {
+      alert("Could not add task");
+    }
+  };
+
+  const updateTask = async (id, status) => {
+    await axios.patch(`${API}/${id}`, { status });
+    loadTasks();
+  };
+
+  const deleteTask = async (id) => {
+    await axios.delete(`${API}/${id}`);
+    loadTasks();
+  };
+
+  return (
+    <div className="container py-5">
+      <h1 className="text-center mb-4">Project Task Manager</h1>
+
+      <div className="input-group mb-4">
+        <input
+          className="form-control"
+          placeholder="Enter task title"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+        />
+        <button className="btn btn-primary" onClick={addTask}>
+          Add Task
+        </button>
+      </div>
+
+      <div className="row">
+        {["Pending", "Ongoing", "Completed"].map(status => (
+          <div className="col-md-4 mb-3" key={status}>
+            <div className="card h-100">
+              <div className="card-header bg-primary text-white">
+                {status} Tasks
+              </div>
+              <div className="card-body">
+                {tasks.filter(t => t.status === status).map(task => (
+                  <div className="card p-3 mb-3" key={task._id}>
+                    <h5>{task.title}</h5>
+                    <p>Status: {task.status}</p>
+                    {status !== "Ongoing" && (
+                      <button
+                        className="btn btn-info mb-2"
+                        onClick={() => updateTask(task._id, "Ongoing")}
+                      >
+                        Mark Ongoing
+                      </button>
+                    )}
+                    {status !== "Completed" && (
+                      <button
+                        className="btn btn-success mb-2"
+                        onClick={() => updateTask(task._id, "Completed")}
+                      >
+                        Mark Completed
+                      </button>
+                    )}
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => deleteTask(task._id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+                {tasks.filter(t => t.status === status).length === 0 && (
+                  <p className="text-muted">No tasks yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default App;
