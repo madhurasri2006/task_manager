@@ -7,6 +7,15 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+// Backend Home Route
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "Task Manager Backend is running successfully!",
+    database: mongoose.connection.readyState === 1
+      ? "MongoDB Connected"
+      : "MongoDB Not Connected"
+  });
+});
 
 // Connect to MongoDB
 mongoose
